@@ -1,0 +1,67 @@
+<UserControl x:Class="slidecraft.Views.FormatBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Height="32">
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <!-- Bold -->
+        <Button Content="B" FontWeight="Bold" MinWidth="28" Padding="4,2"
+                Command="{Binding ToggleBoldCommand}"
+                ToolTip="{DynamicResource Fmt_Bold}" />
+
+        <!-- Italic -->
+        <Button Content="I" FontStyle="Italic" MinWidth="28" Padding="4,2"
+                Command="{Binding ToggleItalicCommand}"
+                ToolTip="{DynamicResource Fmt_Italic}" />
+
+        <Separator Margin="4,0" />
+
+        <!-- Font Size -->
+        <TextBlock Text="{DynamicResource Fmt_FontSize}"
+                   VerticalAlignment="Center" Margin="0,0,4,0" FontSize="12" />
+        <ComboBox x:Name="FontSizeCombo" Width="60" IsEditable="True"
+                  SelectionChanged="OnFontSizeChanged"
+                  ToolTip="{DynamicResource Fmt_FontSize}">
+            <ComboBoxItem Content="10" />
+            <ComboBoxItem Content="12" />
+            <ComboBoxItem Content="14" />
+            <ComboBoxItem Content="16" />
+            <ComboBoxItem Content="18" />
+            <ComboBoxItem Content="20" />
+            <ComboBoxItem Content="24" IsSelected="True" />
+            <ComboBoxItem Content="28" />
+            <ComboBoxItem Content="32" />
+            <ComboBoxItem Content="36" />
+            <ComboBoxItem Content="44" />
+            <ComboBoxItem Content="54" />
+            <ComboBoxItem Content="72" />
+        </ComboBox>
+
+        <Separator Margin="4,0" />
+
+        <!-- Colour palette -->
+        <TextBlock Text="{DynamicResource Fmt_Color}"
+                   VerticalAlignment="Center" Margin="0,0,4,0" FontSize="12" />
+        <ComboBox x:Name="ColorCombo" Width="80"
+                  SelectionChanged="OnColorChanged"
+                  ToolTip="{DynamicResource Fmt_Color}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="14" Height="14"
+                                   Fill="{Binding Tag, RelativeSource={RelativeSource AncestorType=ComboBoxItem}}"
+                                   Margin="0,0,4,0" Stroke="#999" StrokeThickness="0.5" />
+                        <TextBlock Text="{Binding Content, RelativeSource={RelativeSource AncestorType=ComboBoxItem}}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+            <ComboBoxItem Content="Black"   Tag="Black"       IsSelected="True" />
+            <ComboBoxItem Content="Red"     Tag="#E74C3C" />
+            <ComboBoxItem Content="Blue"    Tag="#3498DB" />
+            <ComboBoxItem Content="Green"   Tag="#27AE60" />
+            <ComboBoxItem Content="Orange"  Tag="#E67E22" />
+            <ComboBoxItem Content="Purple"  Tag="#9B59B6" />
+            <ComboBoxItem Content="Gray"    Tag="#7F8C8D" />
+            <ComboBoxItem Content="White"   Tag="White" />
+        </ComboBox>
+    </StackPanel>
+</UserControl>

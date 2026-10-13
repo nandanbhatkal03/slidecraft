@@ -25,3 +25,4 @@ C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-window
 C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\slidecraft.pdb
 C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\slidecraft.genruntimeconfig.cache
 C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\ref\slidecraft.dll
+C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\slidecraft.sourcelink.json

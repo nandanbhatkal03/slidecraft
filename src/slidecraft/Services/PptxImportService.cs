@@ -26,16 +26,17 @@ public sealed class PptxImportService : IPptxService
 
         using var doc = PresentationDocument.Open(path, false);
         var presPart = doc.PresentationPart;
-        if (presPart?.Presentation.SlideIdList == null)
-            return (model, skipped);
+        if (presPart is null) return (model, skipped);
+        var slideIdList = presPart.Presentation?.SlideIdList;
+        if (slideIdList is null) return (model, skipped);
 
-        foreach (var slideId in presPart.Presentation.SlideIdList.Elements<P.SlideId>())
+        foreach (var slideId in slideIdList.Elements<P.SlideId>())
         {
             var relId = slideId.RelationshipId!.Value!;
             var slidePart = (SlidePart)presPart.GetPartById(relId);
             var slideModel = new SlideModel();
 
-            var shapeTree = slidePart.Slide.CommonSlideData?.ShapeTree;
+            var shapeTree = slidePart.Slide?.CommonSlideData?.ShapeTree;
             if (shapeTree != null)
             {
                 foreach (var child in shapeTree.ChildElements)
@@ -72,7 +73,7 @@ public sealed class PptxImportService : IPptxService
             }
 
             // Read transition
-            var transition = slidePart.Slide.GetFirstChild<P.Transition>();
+            var transition = slidePart.Slide?.GetFirstChild<P.Transition>();
             if (transition != null)
                 slideModel.Transition = ReadTransition(transition);
 

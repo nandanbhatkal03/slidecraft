@@ -35,13 +35,16 @@ public sealed class PptxExportService : IPptxService
         var presPart = doc.PresentationPart!;
         var layout = presPart.SlideMasterParts.First().SlideLayoutParts.First();
 
-        // Remove any pre-existing slides in template (normally none)
-        presPart.Presentation.SlideIdList?.RemoveAllChildren();
+        var presentation = presPart.Presentation
+            ?? throw new InvalidOperationException("Template has no Presentation element.");
+        presentation.SlideIdList ??= new P.SlideIdList();
+        presentation.SlideIdList.RemoveAllChildren();
 
         foreach (var slide in model.Slides)
         {
             var slidePart = AddSlide(presPart, layout);
-            var tree = slidePart.Slide.CommonSlideData!.ShapeTree!;
+            var csd = slidePart.Slide!.CommonSlideData ?? new P.CommonSlideData();
+            var tree = csd.ShapeTree ?? new P.ShapeTree();
             uint id = 2;
             foreach (var el in slide.Elements)
             {
@@ -221,10 +224,8 @@ public sealed class PptxExportService : IPptxService
             new P.ColorMapOverride(new D.MasterColorMapping()));
         slidePart.AddPart(layout);
 
-        var pres = presPart.Presentation;
-        var list = pres.SlideIdList;
-        if (list is null)
-            list = pres.InsertAfter(new P.SlideIdList(), pres.SlideMasterIdList!);
+        var pres = presPart.Presentation!;
+        var list = pres.SlideIdList ?? pres.InsertAfter(new P.SlideIdList(), pres.SlideMasterIdList!);
         uint next = list.Elements<P.SlideId>().Select(s => s.Id!.Value).DefaultIfEmpty(255U).Max() + 1;
         list.Append(new P.SlideId { Id = next, RelationshipId = presPart.GetIdOfPart(slidePart) });
         return slidePart;

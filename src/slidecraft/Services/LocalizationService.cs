@@ -15,8 +15,10 @@ public sealed class LocalizationService
     /// <summary>Current culture code ("en" or "kn").</summary>
     public string CurrentCulture { get; private set; } = "en";
 
-    /// <summary>Fired after the UI language changes.</summary>
+    /// <summary>Fired after the UI language changes (used in Phase 2).</summary>
+#pragma warning disable CS0067 // Event is used in Phase 2
     public event Action? LanguageChanged;
+#pragma warning restore CS0067
 
     /// <summary>
     /// Retrieves a localised string by resource key. Returns the key itself

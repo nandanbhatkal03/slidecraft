@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("slidecraft")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a3ef73aa5393727f77f2d2abc62011b6c9a91211")]
 [assembly: System.Reflection.AssemblyProductAttribute("slidecraft")]
 [assembly: System.Reflection.AssemblyTitleAttribute("slidecraft")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
