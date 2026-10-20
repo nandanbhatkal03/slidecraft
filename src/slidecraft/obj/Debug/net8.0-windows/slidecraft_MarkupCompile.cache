@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\App.xaml
-2-1385024719
+3391873276
 
 24-973916507
 201-1304301121
-Resources\Strings.en.xaml;Views\MainWindow.xaml;
+Resources\Strings.en.xaml;Views\FormatBar.xaml;Views\MainWindow.xaml;
 
 False
 
