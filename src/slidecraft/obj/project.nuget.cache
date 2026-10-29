@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "d8qzYnpk0HQ=",
+  "dgSpecHash": "11ITh1aiOOY=",
   "success": true,
-  "projectFilePath": "C:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\slidecraft.csproj",
+  "projectFilePath": "c:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\slidecraft.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\hp\\.nuget\\packages\\communitytoolkit.mvvm\\8.4.2\\communitytoolkit.mvvm.8.4.2.nupkg.sha512",
     "C:\\Users\\hp\\.nuget\\packages\\documentformat.openxml\\3.5.1\\documentformat.openxml.3.5.1.nupkg.sha512",

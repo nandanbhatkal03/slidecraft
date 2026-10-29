@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\
+c:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\
 slidecraft
 none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
-C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\App.xaml
-3391873276
+c:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\App.xaml
+4-379058691
 
-24-973916507
+26418030312
 201-1304301121
-Resources\Strings.en.xaml;Views\FormatBar.xaml;Views\MainWindow.xaml;
+Resources\Strings.en.xaml;Views\FormatBar.xaml;Views\MainWindow.xaml;Views\SlideshowWindow.xaml;
 
 False
 

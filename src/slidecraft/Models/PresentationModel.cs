@@ -7,7 +7,7 @@ namespace slidecraft.Models;
 public sealed class PresentationModel
 {
     /// <summary>The slides in this presentation, in display order.</summary>
-    public List<SlideModel> Slides { get; } = new();
+    public List<SlideModel> Slides { get; set; } = new();
 
     /// <summary>
     /// The file path this presentation was last saved to or opened from.

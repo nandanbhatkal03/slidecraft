@@ -134,6 +134,46 @@ public partial class SlideshowWindow : Window
             Canvas.SetTop(visual, element.Y);
             SlideCanvas.Children.Add(visual);
         }
+
+        // Apply per-slide transition animation
+        ApplySlideTransition(slide.Transition);
+    }
+
+    /// <summary>Apply transition animation according to the slide's transition type.</summary>
+    private void ApplySlideTransition(Models.TransitionType transition)
+    {
+        SlideCanvas.RenderTransform = Transform.Identity;
+        SlideCanvas.Clip = null;
+
+        switch (transition)
+        {
+            case Models.TransitionType.Fade:
+                var fadeAnim = new System.Windows.Media.Animation.DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(400));
+                SlideCanvas.BeginAnimation(UIElement.OpacityProperty, fadeAnim);
+                break;
+
+            case Models.TransitionType.Push:
+                var translate = new TranslateTransform(960, 0);
+                SlideCanvas.RenderTransform = translate;
+                var pushAnim = new System.Windows.Media.Animation.DoubleAnimation(960, 0, TimeSpan.FromMilliseconds(400));
+                translate.BeginAnimation(TranslateTransform.XProperty, pushAnim);
+                break;
+
+            case Models.TransitionType.Wipe:
+                var clip = new RectangleGeometry(new Rect(0, 0, 0, 540));
+                SlideCanvas.Clip = clip;
+                var wipeAnim = new System.Windows.Media.Animation.RectAnimation(
+                    new Rect(0, 0, 0, 540),
+                    new Rect(0, 0, 960, 540),
+                    TimeSpan.FromMilliseconds(400));
+                clip.BeginAnimation(RectangleGeometry.RectProperty, wipeAnim);
+                break;
+
+            default:
+                SlideCanvas.BeginAnimation(UIElement.OpacityProperty, null);
+                SlideCanvas.Opacity = 1.0;
+                break;
+        }
     }
 
     /// <summary>Create a brush from a hex colour string.</summary>

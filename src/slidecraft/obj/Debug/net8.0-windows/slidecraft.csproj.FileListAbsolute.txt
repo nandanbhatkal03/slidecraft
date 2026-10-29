@@ -28,3 +28,7 @@ C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-window
 C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\slidecraft.sourcelink.json
 C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\Views\FormatBar.baml
 C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\Views\FormatBar.g.cs
+C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\Views\SlideshowWindow.baml
+C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\Views\SlideshowWindow.g.cs
+C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\GeneratedInternalTypeHelper.g.cs
+C:\Users\hp\Desktop\slidecraft\slidecraft\src\slidecraft\obj\Debug\net8.0-windows\slidecraft_MarkupCompile.lref

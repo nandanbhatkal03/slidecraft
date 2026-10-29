@@ -57,24 +57,47 @@ public partial class FormatBar : UserControl
         }
     }
 
-    /// <summary>Handle font size change from the ComboBox.</summary>
+    /// <summary>Handle font size change from the ComboBox selection.</summary>
     private void OnFontSizeChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_suppressEvents) return;
-        var vm = GetMainViewModel();
-        if (vm?.SelectedElement is not { IsText: true } sel) return;
-
         string? text = null;
         if (FontSizeCombo.SelectedItem is ComboBoxItem item)
             text = item.Content?.ToString();
         else
             text = FontSizeCombo.Text;
 
-        if (double.TryParse(text, out double size) && size >= 6 && size <= 200)
+        ApplyFontSizeText(text);
+    }
+
+    /// <summary>Handle losing focus on the font size box (for typed numbers).</summary>
+    private void OnFontSizeLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        ApplyFontSizeText(FontSizeCombo.Text);
+    }
+
+    /// <summary>Handle Enter key in font size box.</summary>
+    private void OnFontSizeKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter)
         {
+            ApplyFontSizeText(FontSizeCombo.Text);
+            e.Handled = true;
+        }
+    }
+
+    private void ApplyFontSizeText(string? text)
+    {
+        var vm = GetMainViewModel();
+        if (vm?.SelectedElement is not { IsText: true } sel) return;
+
+        if (double.TryParse(text, out double size) && size >= 6 && size <= 200 && Math.Abs(sel.FontSize - size) > 0.01)
+        {
+            vm.PushUndoSnapshot();
             sel.FontSize = size;
             vm.IsDirty = true;
-            vm.CanvasRefreshRequested?.Invoke();
+            vm.RequestCanvasRefresh();
         }
     }
 
@@ -92,9 +115,13 @@ public partial class FormatBar : UserControl
             if (hex.Equals("Black", StringComparison.OrdinalIgnoreCase)) hex = "000000";
             else if (hex.Equals("White", StringComparison.OrdinalIgnoreCase)) hex = "FFFFFF";
 
-            sel.ColorHex = hex;
-            vm.IsDirty = true;
-            vm.CanvasRefreshRequested?.Invoke();
+            if (!hex.Equals(sel.ColorHex, StringComparison.OrdinalIgnoreCase))
+            {
+                vm.PushUndoSnapshot();
+                sel.ColorHex = hex;
+                vm.IsDirty = true;
+                vm.RequestCanvasRefresh();
+            }
         }
     }
 

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\slidecraft.csproj": {}
+    "c:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\slidecraft.csproj": {}
   },
   "projects": {
-    "C:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\slidecraft.csproj": {
+    "c:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\slidecraft.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\slidecraft.csproj",
+        "projectUniqueName": "c:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\slidecraft.csproj",
         "projectName": "slidecraft",
-        "projectPath": "C:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\slidecraft.csproj",
+        "projectPath": "c:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\slidecraft.csproj",
         "packagesPath": "C:\\Users\\hp\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\obj\\",
+        "outputPath": "c:\\Users\\hp\\Desktop\\slidecraft\\slidecraft\\src\\slidecraft\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\hp\\AppData\\Roaming\\NuGet\\NuGet.Config"

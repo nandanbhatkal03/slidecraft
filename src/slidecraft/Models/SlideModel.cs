@@ -7,7 +7,7 @@ namespace slidecraft.Models;
 public sealed class SlideModel
 {
     /// <summary>The visual elements (text boxes, images) on this slide.</summary>
-    public List<SlideElement> Elements { get; } = new();
+    public List<SlideElement> Elements { get; set; } = new();
 
     /// <summary>The transition animation applied when entering this slide.</summary>
     public TransitionType Transition { get; set; } = TransitionType.None;

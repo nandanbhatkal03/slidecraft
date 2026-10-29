@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using slidecraft.Helpers;
 using slidecraft.Models;
 using slidecraft.Services;
 
@@ -17,6 +19,7 @@ public partial class MainViewModel : ObservableObject
     private readonly PptxExportService _exportService = new();
     private readonly PptxImportService _importService = new();
     private readonly DialogService _dialogService = new();
+    private readonly RelayUndoStack _undoStack = new();
 
     // ── Observable state ─────────────────────────────────────────────
 
@@ -41,6 +44,12 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Raised to request the view to update the status bar.</summary>
     public event Action? StatusUpdateRequested;
 
+    /// <summary>Raised to request the view to open the slideshow window.</summary>
+    public event Action? SlideshowRequested;
+
+    /// <summary>Request the view to re-render the canvas (callable from outside).</summary>
+    public void RequestCanvasRefresh() => CanvasRefreshRequested?.Invoke();
+
     // ── Constructor ──────────────────────────────────────────────────
 
     /// <summary>Creates the view model and initialises a new presentation.</summary>
@@ -57,11 +66,12 @@ public partial class MainViewModel : ObservableObject
     {
         if (IsDirty && !ConfirmDiscardChanges()) return;
 
+        _undoStack.Clear();
         Presentation = new PresentationModel();
         Slides.Clear();
         SelectedElement = null;
 
-        AddSlide(null); // always start with one blank slide
+        AddSlideInternal(null); // always start with one blank slide
 
         IsDirty = false;
         StatusUpdateRequested?.Invoke();
@@ -79,6 +89,7 @@ public partial class MainViewModel : ObservableObject
         try
         {
             var (model, skipped) = _importService.Open(path);
+            _undoStack.Clear();
             Presentation = model;
             Slides.Clear();
             SelectedElement = null;
@@ -88,7 +99,7 @@ public partial class MainViewModel : ObservableObject
 
             // Ensure at least one slide
             if (Slides.Count == 0)
-                AddSlide(null);
+                AddSlideInternal(null);
 
             CurrentSlide = Slides.FirstOrDefault();
             IsDirty = false;
@@ -149,6 +160,15 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void AddSlide(string? layoutKey)
     {
+        PushUndoSnapshot();
+        AddSlideInternal(layoutKey);
+        IsDirty = true;
+        StatusUpdateRequested?.Invoke();
+    }
+
+    /// <summary>Internal helper to add a slide without pushing an undo snapshot.</summary>
+    private void AddSlideInternal(string? layoutKey)
+    {
         var slideModel = new SlideModel();
         LayoutFactory.Apply(slideModel, layoutKey);
         Presentation.Slides.Add(slideModel);
@@ -156,10 +176,27 @@ public partial class MainViewModel : ObservableObject
         var vm = new SlideViewModel(slideModel, Slides.Count + 1);
         Slides.Add(vm);
         CurrentSlide = vm;
-        IsDirty = true;
 
         CanvasRefreshRequested?.Invoke();
-        StatusUpdateRequested?.Invoke();
+    }
+
+    /// <summary>Apply a named layout to the current slide.</summary>
+    [RelayCommand]
+    public void ApplyLayout(string? layoutKey)
+    {
+        if (CurrentSlide == null) return;
+        PushUndoSnapshot();
+
+        CurrentSlide.Model.Elements.Clear();
+        CurrentSlide.Elements.Clear();
+        LayoutFactory.Apply(CurrentSlide.Model, layoutKey);
+
+        foreach (var el in CurrentSlide.Model.Elements)
+            CurrentSlide.Elements.Add(new ElementViewModel(el));
+
+        SelectedElement = null;
+        IsDirty = true;
+        CanvasRefreshRequested?.Invoke();
     }
 
     /// <summary>Delete the current slide.</summary>
@@ -168,6 +205,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (CurrentSlide == null || Slides.Count <= 1) return;
 
+        PushUndoSnapshot();
         var idx = Slides.IndexOf(CurrentSlide);
         Presentation.Slides.Remove(CurrentSlide.Model);
         Slides.Remove(CurrentSlide);
@@ -186,6 +224,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (CurrentSlide == null) return;
 
+        PushUndoSnapshot();
         var srcModel = CurrentSlide.Model;
         var newModel = new SlideModel { Transition = srcModel.Transition };
 
@@ -232,6 +271,7 @@ public partial class MainViewModel : ObservableObject
         var idx = Slides.IndexOf(CurrentSlide);
         if (idx <= 0) return;
 
+        PushUndoSnapshot();
         Slides.Move(idx, idx - 1);
         (Presentation.Slides[idx], Presentation.Slides[idx - 1]) =
             (Presentation.Slides[idx - 1], Presentation.Slides[idx]);
@@ -248,6 +288,7 @@ public partial class MainViewModel : ObservableObject
         var idx = Slides.IndexOf(CurrentSlide);
         if (idx < 0 || idx >= Slides.Count - 1) return;
 
+        PushUndoSnapshot();
         Slides.Move(idx, idx + 1);
         (Presentation.Slides[idx], Presentation.Slides[idx + 1]) =
             (Presentation.Slides[idx + 1], Presentation.Slides[idx]);
@@ -264,6 +305,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (CurrentSlide == null) return;
 
+        PushUndoSnapshot();
         var textEl = new TextElement
         {
             X = 100, Y = 100, Width = 300, Height = 60,
@@ -308,6 +350,7 @@ public partial class MainViewModel : ObservableObject
             w *= scale;
             h *= scale;
 
+            PushUndoSnapshot();
             var imgEl = new ImageElement
             {
                 X = 100, Y = 100, Width = w, Height = h,
@@ -329,6 +372,7 @@ public partial class MainViewModel : ObservableObject
     private void DeleteElement()
     {
         if (CurrentSlide == null || SelectedElement == null) return;
+        PushUndoSnapshot();
         CurrentSlide.RemoveElement(SelectedElement);
         SelectedElement = null;
         IsDirty = true;
@@ -343,6 +387,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (SelectedElement is { IsText: true })
         {
+            PushUndoSnapshot();
             SelectedElement.Bold = !SelectedElement.Bold;
             IsDirty = true;
             CanvasRefreshRequested?.Invoke();
@@ -355,33 +400,91 @@ public partial class MainViewModel : ObservableObject
     {
         if (SelectedElement is { IsText: true })
         {
+            PushUndoSnapshot();
             SelectedElement.Italic = !SelectedElement.Italic;
             IsDirty = true;
             CanvasRefreshRequested?.Invoke();
         }
     }
 
-    // ── Stubs for later phases ───────────────────────────────────────
+    // ── Slideshow ─────────────────────────────────────────────────────
 
-    /// <summary>Start slideshow mode (stub — implemented in step 10).</summary>
+    /// <summary>Start slideshow mode from the current slide.</summary>
     [RelayCommand]
     private void StartSlideshow()
     {
-        // Will be implemented in step 10
+        if (Slides.Count == 0) return;
+        SlideshowRequested?.Invoke();
     }
 
-    /// <summary>Undo the last action (stub — implemented in step 10).</summary>
+    // ── Undo / Redo ──────────────────────────────────────────────────
+
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PreferredObjectCreationHandling = System.Text.Json.Serialization.JsonObjectCreationHandling.Populate
+    };
+
+    /// <summary>Create a snapshot of the current presentation model state.</summary>
+    public byte[]? CreateSnapshot()
+    {
+        try
+        {
+            return JsonSerializer.SerializeToUtf8Bytes(Presentation, _jsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Push a snapshot of the current presentation state onto the undo stack.</summary>
+    public void PushUndoSnapshot()
+    {
+        var snapshot = CreateSnapshot();
+        if (snapshot != null)
+            _undoStack.Push(snapshot);
+    }
+
+    /// <summary>Undo the last action by restoring a snapshot.</summary>
     [RelayCommand]
     private void Undo()
     {
-        // Will be implemented in step 10
+        var current = CreateSnapshot();
+        if (current == null) return;
+        var snapshot = _undoStack.Undo(current);
+        if (snapshot == null) return;
+        RestoreSnapshot(snapshot);
     }
 
-    /// <summary>Redo the last undone action (stub — implemented in step 10).</summary>
+    /// <summary>Redo the last undone action.</summary>
     [RelayCommand]
     private void Redo()
     {
-        // Will be implemented in step 10
+        var current = CreateSnapshot();
+        if (current == null) return;
+        var snapshot = _undoStack.Redo(current);
+        if (snapshot == null) return;
+        RestoreSnapshot(snapshot);
+    }
+
+    /// <summary>Restore a JSON snapshot of the presentation model.</summary>
+    private void RestoreSnapshot(byte[] snapshot)
+    {
+        try
+        {
+            var model = JsonSerializer.Deserialize<PresentationModel>(snapshot, _jsonOptions);
+            if (model == null) return;
+            Presentation = model;
+            Slides.Clear();
+            SelectedElement = null;
+            for (int i = 0; i < model.Slides.Count; i++)
+                Slides.Add(new SlideViewModel(model.Slides[i], i + 1));
+            CurrentSlide = Slides.FirstOrDefault();
+            IsDirty = true;
+            CanvasRefreshRequested?.Invoke();
+            StatusUpdateRequested?.Invoke();
+        }
+        catch { /* restore failures are non-critical */ }
     }
 
     /// <summary>Switch UI language (stub — implemented in Phase 2).</summary>

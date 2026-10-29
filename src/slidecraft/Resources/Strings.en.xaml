@@ -49,4 +49,6 @@
   <s:String x:Key="Dlg_ImageTitle">Select Image</s:String>
   <s:String x:Key="Dlg_PptxFilter">PowerPoint Files (*.pptx)|*.pptx</s:String>
   <s:String x:Key="Dlg_ImageFilter">Image Files (*.png;*.jpg;*.jpeg;*.gif)|*.png;*.jpg;*.jpeg;*.gif</s:String>
+  <s:String x:Key="Slideshow_Hint">Arrow keys: navigate | Esc: exit</s:String>
+  <s:String x:Key="Msg_NoSlides">No slides to show.</s:String>
 </ResourceDictionary>

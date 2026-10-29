@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -38,11 +39,14 @@ public sealed class DraggableElement : ContentControl
     public event Action<DraggableElement>? DeleteRequested;
 
     /// <summary>Raised when a property changes that should dirty the presentation.</summary>
-    /// <summary>Raised when a property changes that should dirty the presentation.</summary>
     public event Action? Modified;
 
     /// <summary>Allows external adorners to trigger the Modified event.</summary>
     public void NotifyModified() => Modified?.Invoke();
+
+    /// <summary>Helper to resolve the MainViewModel from the parent window.</summary>
+    public MainViewModel? GetMainViewModel() =>
+        Window.GetWindow(this)?.DataContext as MainViewModel;
 
     /// <summary>Whether this element is currently selected (shows resize handles).</summary>
     public bool IsSelected
@@ -77,10 +81,38 @@ public sealed class DraggableElement : ContentControl
 
         CreateContent();
 
+        vm.PropertyChanged += OnViewModelPropertyChanged;
+
         MouseLeftButtonDown += OnMouseLeftButtonDown;
         MouseLeftButtonUp += OnMouseLeftButtonUp;
         MouseMove += OnMouseMove;
         KeyDown += OnKeyDown;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(ElementViewModel.X):
+                Canvas.SetLeft(this, ViewModel.X);
+                break;
+            case nameof(ElementViewModel.Y):
+                Canvas.SetTop(this, ViewModel.Y);
+                break;
+            case nameof(ElementViewModel.Width):
+                Width = ViewModel.Width;
+                break;
+            case nameof(ElementViewModel.Height):
+                Height = ViewModel.Height;
+                break;
+            case nameof(ElementViewModel.Text):
+            case nameof(ElementViewModel.FontSize):
+            case nameof(ElementViewModel.Bold):
+            case nameof(ElementViewModel.Italic):
+            case nameof(ElementViewModel.ColorHex):
+                RefreshVisual();
+                break;
+        }
     }
 
     // ── Content creation ─────────────────────────────────────────────
@@ -177,10 +209,17 @@ public sealed class DraggableElement : ContentControl
         _isDragging = false;
         ReleaseMouseCapture();
 
-        // Sync final position back to VM
-        ViewModel.X = Canvas.GetLeft(this);
-        ViewModel.Y = Canvas.GetTop(this);
-        Modified?.Invoke();
+        double finalX = Canvas.GetLeft(this);
+        double finalY = Canvas.GetTop(this);
+
+        if (Math.Abs(finalX - _startX) > 0.5 || Math.Abs(finalY - _startY) > 0.5)
+        {
+            // Position changed, push snapshot first
+            GetMainViewModel()?.PushUndoSnapshot();
+            ViewModel.X = finalX;
+            ViewModel.Y = finalY;
+            Modified?.Invoke();
+        }
         e.Handled = true;
     }
 
@@ -240,12 +279,16 @@ public sealed class DraggableElement : ContentControl
         if (!_isEditing || _editBox == null) return;
         _isEditing = false;
 
-        ViewModel.Text = _editBox.Text;
-        if (_textBlock != null)
-            _textBlock.Text = ViewModel.Text;
+        if (ViewModel.Text != _editBox.Text)
+        {
+            GetMainViewModel()?.PushUndoSnapshot();
+            ViewModel.Text = _editBox.Text;
+            if (_textBlock != null)
+                _textBlock.Text = ViewModel.Text;
+            Modified?.Invoke();
+        }
 
         Content = _textBlock;
-        Modified?.Invoke();
     }
 
     // ── Helpers ──────────────────────────────────────────────────────
@@ -355,11 +398,21 @@ internal sealed class ResizeAdorner : Adorner
         thumb.ReleaseMouseCapture();
 
         var el = (DraggableElement)AdornedElement;
-        el.ViewModel.X = Canvas.GetLeft(el);
-        el.ViewModel.Y = Canvas.GetTop(el);
-        el.ViewModel.Width = el.Width;
-        el.ViewModel.Height = el.Height;
-        el.NotifyModified();
+        double newX = Canvas.GetLeft(el);
+        double newY = Canvas.GetTop(el);
+        double newW = el.Width;
+        double newH = el.Height;
+
+        if (Math.Abs(newX - _origX) > 0.5 || Math.Abs(newY - _origY) > 0.5 ||
+            Math.Abs(newW - _origW) > 0.5 || Math.Abs(newH - _origH) > 0.5)
+        {
+            el.GetMainViewModel()?.PushUndoSnapshot();
+            el.ViewModel.X = newX;
+            el.ViewModel.Y = newY;
+            el.ViewModel.Width = newW;
+            el.ViewModel.Height = newH;
+            el.NotifyModified();
+        }
         e.Handled = true;
     }
 

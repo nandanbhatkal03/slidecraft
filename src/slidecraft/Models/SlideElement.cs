@@ -1,9 +1,14 @@
+using System.Text.Json.Serialization;
+
 namespace slidecraft.Models;
 
 /// <summary>
 /// Abstract base class for all elements that can appear on a slide.
 /// Stores position and size in points on a 960 × 540 canvas.
+/// Supports polymorphic JSON serialization for the undo/redo snapshot stack.
 /// </summary>
+[JsonDerivedType(typeof(TextElement), typeDiscriminator: "text")]
+[JsonDerivedType(typeof(ImageElement), typeDiscriminator: "image")]
 public abstract class SlideElement
 {
     /// <summary>X position in points from the left edge of the slide.</summary>

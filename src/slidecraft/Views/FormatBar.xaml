@@ -20,6 +20,8 @@
                    VerticalAlignment="Center" Margin="0,0,4,0" FontSize="12" />
         <ComboBox x:Name="FontSizeCombo" Width="60" IsEditable="True"
                   SelectionChanged="OnFontSizeChanged"
+                  LostFocus="OnFontSizeLostFocus"
+                  KeyDown="OnFontSizeKeyDown"
                   ToolTip="{DynamicResource Fmt_FontSize}">
             <ComboBoxItem Content="10" />
             <ComboBoxItem Content="12" />

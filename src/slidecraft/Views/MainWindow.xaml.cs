@@ -17,6 +17,7 @@ namespace slidecraft.Views;
 public partial class MainWindow : Window
 {
     private MainViewModel _viewModel = null!;
+    private bool _suppressEvents;
 
     /// <summary>Initialises the main window, creates the ViewModel and wires events.</summary>
     public MainWindow()
@@ -28,11 +29,17 @@ public partial class MainWindow : Window
 
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel.CanvasRefreshRequested += RenderCanvas;
-        _viewModel.StatusUpdateRequested += UpdateStatusBar;
+        _viewModel.StatusUpdateRequested += () =>
+        {
+            UpdateStatusBar();
+            UpdateTitleBar();
+        };
+        _viewModel.SlideshowRequested += OnSlideshowRequested;
 
         // Initial render
         RenderCanvas();
         UpdateStatusBar();
+        UpdateTitleBar();
     }
 
     // ── ViewModel property changes ───────────────────────────────────
@@ -50,6 +57,9 @@ public partial class MainWindow : Window
                 UpdateTitleBar();
                 UpdateStatusBar();
                 break;
+            case nameof(MainViewModel.SelectedElement):
+                FormatBarControl.SyncToSelection(_viewModel.SelectedElement);
+                break;
         }
     }
 
@@ -57,12 +67,15 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Clear the canvas and re-create visual elements for the current slide.
+    /// Preserves element selection if still present.
     /// </summary>
     private void RenderCanvas()
     {
         SlideCanvas.Children.Clear();
         var slide = _viewModel.CurrentSlide;
         if (slide == null) return;
+
+        DraggableElement? elementToSelect = null;
 
         foreach (var element in slide.Elements)
         {
@@ -72,8 +85,21 @@ public partial class MainWindow : Window
             draggable.Modified += () =>
             {
                 _viewModel.IsDirty = true;
+                UpdateTitleBar();
+                UpdateStatusBar();
             };
             SlideCanvas.Children.Add(draggable);
+
+            if (_viewModel.SelectedElement != null && element == _viewModel.SelectedElement)
+            {
+                elementToSelect = draggable;
+            }
+        }
+
+        if (elementToSelect != null)
+        {
+            elementToSelect.IsSelected = true;
+            FormatBarControl.SyncToSelection(elementToSelect.ViewModel);
         }
     }
 
@@ -88,6 +114,7 @@ public partial class MainWindow : Window
         }
         element.IsSelected = true;
         _viewModel.SelectedElement = element.ViewModel;
+        FormatBarControl.SyncToSelection(element.ViewModel);
     }
 
     /// <summary>Handle Delete key on a selected element.</summary>
@@ -120,12 +147,24 @@ public partial class MainWindow : Window
         // The binding handles CurrentSlide update; PropertyChanged triggers RenderCanvas
     }
 
+    // ── Layout dropdown ─────────────────────────────────────────────
+
+    /// <summary>Apply the chosen layout when the layout dropdown selection changes.</summary>
+    private void OnLayoutChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressEvents || _viewModel.CurrentSlide == null) return;
+        if (LayoutCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+        {
+            _viewModel.ApplyLayoutCommand.Execute(tag);
+        }
+    }
+
     // ── Transition dropdown ──────────────────────────────────────────
 
     /// <summary>Update the current slide's transition when the dropdown changes.</summary>
     private void OnTransitionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_viewModel.CurrentSlide == null) return;
+        if (_suppressEvents || _viewModel.CurrentSlide == null) return;
         if (TransitionCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
         {
             var transition = tag switch
@@ -135,16 +174,30 @@ public partial class MainWindow : Window
                 "Wipe" => TransitionType.Wipe,
                 _ => TransitionType.None
             };
-            _viewModel.CurrentSlide.Transition = transition;
-            _viewModel.IsDirty = true;
+            if (_viewModel.CurrentSlide.Transition != transition)
+            {
+                _viewModel.PushUndoSnapshot();
+                _viewModel.CurrentSlide.Transition = transition;
+                _viewModel.IsDirty = true;
+                UpdateTitleBar();
+                UpdateStatusBar();
+            }
         }
     }
 
-    /// <summary>Sync the transition combo to the current slide's value.</summary>
+    /// <summary>Sync the transition combo to the current slide's value without marking dirty.</summary>
     private void SyncTransitionCombo()
     {
         if (_viewModel.CurrentSlide == null) return;
-        TransitionCombo.SelectedIndex = (int)_viewModel.CurrentSlide.Transition;
+        _suppressEvents = true;
+        try
+        {
+            TransitionCombo.SelectedIndex = (int)_viewModel.CurrentSlide.Transition;
+        }
+        finally
+        {
+            _suppressEvents = false;
+        }
     }
 
     // ── Status bar & title ───────────────────────────────────────────
@@ -174,6 +227,17 @@ public partial class MainWindow : Window
     }
 
     // ── Window events ────────────────────────────────────────────────
+
+    /// <summary>Open the slideshow window starting at the current slide.</summary>
+    private void OnSlideshowRequested()
+    {
+        var startIdx = _viewModel.CurrentSlide != null
+            ? _viewModel.Slides.IndexOf(_viewModel.CurrentSlide)
+            : 0;
+        var window = new SlideshowWindow(_viewModel.Slides, startIdx);
+        window.Owner = this;
+        window.ShowDialog();
+    }
 
     /// <summary>Handles the Exit menu item click.</summary>
     private void OnExitClick(object sender, RoutedEventArgs e) => Close();

@@ -22,8 +22,9 @@ public sealed class LocalizationService
 
     /// <summary>
     /// Retrieves a localised string by resource key. Returns the key itself
-    /// if the resource is not found.
+    /// if the resource is not found or when running in test contexts where
+    /// Application.Current is null.
     /// </summary>
     public string Get(string key) =>
-        Application.Current.TryFindResource(key) as string ?? key;
+        Application.Current?.TryFindResource(key) as string ?? key;
 }

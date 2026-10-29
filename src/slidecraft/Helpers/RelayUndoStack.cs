@@ -1,8 +1,7 @@
 namespace slidecraft.Helpers;
 
 /// <summary>
-/// A simple undo/redo stack that stores snapshots as byte arrays.
-/// Phase-1 stub — full implementation in step 10.
+/// A reliable undo/redo stack that stores snapshots as byte arrays (Memento pattern).
 /// </summary>
 public sealed class RelayUndoStack
 {
@@ -15,29 +14,33 @@ public sealed class RelayUndoStack
     /// <summary>Whether there is an action to redo.</summary>
     public bool CanRedo => _redoStack.Count > 0;
 
-    /// <summary>Push a snapshot onto the undo stack and clear redo.</summary>
+    /// <summary>Push a snapshot of the current state before a change onto the undo stack and clear redo.</summary>
     public void Push(byte[] snapshot)
     {
         _undoStack.Push(snapshot);
         _redoStack.Clear();
     }
 
-    /// <summary>Pop the last snapshot from the undo stack.</summary>
-    public byte[]? Undo()
+    /// <summary>
+    /// Undo the last action. Saves <paramref name="currentSnapshot"/> onto the redo stack
+    /// and returns the previous state snapshot to restore.
+    /// </summary>
+    public byte[]? Undo(byte[] currentSnapshot)
     {
         if (_undoStack.Count == 0) return null;
-        var snapshot = _undoStack.Pop();
-        _redoStack.Push(snapshot);
-        return snapshot;
+        _redoStack.Push(currentSnapshot);
+        return _undoStack.Pop();
     }
 
-    /// <summary>Pop the last snapshot from the redo stack.</summary>
-    public byte[]? Redo()
+    /// <summary>
+    /// Redo the last undone action. Saves <paramref name="currentSnapshot"/> onto the undo stack
+    /// and returns the next state snapshot to restore.
+    /// </summary>
+    public byte[]? Redo(byte[] currentSnapshot)
     {
         if (_redoStack.Count == 0) return null;
-        var snapshot = _redoStack.Pop();
-        _undoStack.Push(snapshot);
-        return snapshot;
+        _undoStack.Push(currentSnapshot);
+        return _redoStack.Pop();
     }
 
     /// <summary>Clear both stacks.</summary>
